@@ -1,0 +1,56 @@
+[
+  {
+    "cmd": "tsmodule",
+    "path": ".robowr/cmds/",
+    "name": "tsmodule.js",
+    "data": "\"use strict\";\nObject.defineProperty(exports, \"__esModule\", { value: true });\n\n// Fill these with your own defaults, if you want...\nexports.init = {\n    \"name\": '',\n    \"author\" : '' \n};\n\n// Ask one of the options ?\n/*\n\n{\n  \"?name\" : \"\"\n}\n\n*/\n\n// Example dependencies...\n/*\nhttps://blog.cloudboost.io/initializing-a-react-app-using-typescript-and-webpack-4320b6ed38c2\n\nyarn add react react-dom\nyarn add bootstrap@4.0.0-beta reactstrap@next\nyarn add --dev typescript typings tslint\nyarn add --dev @types/react @types/react-dom @types/reactstrap\nyarn add --dev webpack  webpack-dev-server  html-webpack-plugin extract-text-webpack-plugin  raw-loader  css-loader  style-loader sass-loader  node-sass  url-loader  file-loader  awesome-typescript-loader\n*/\n\n// How to create tests...\n/*\nhttps://journal.artfuldev.com/write-tests-for-typescript-projects-with-mocha-and-chai-in-typescript-86e053bdb2b6\n*/\n\nexports.short_doc = 'Initialize Project';\nfunction run(wr) {\n    const model = wr.getState();\n    // creating the application basic structure...\n    wr.getFileWriter('/src/', 'index.ts').raw(`\n// the starting point of the applictaion ${model.name}\n\nexport function HelloWorld() {\n  return 'Hello World!'\n}\n  \n  `);\n\n  // Do not add models and views this time\n  /*\n    wr.getFileWriter('/src/model/', 'index.ts').raw(`\n// The ${model.name} models come about here\n  \n  `);\n    wr.getFileWriter('/src/views/', 'index.ts').raw(`\n// Views of ${model.name}\n  \n  `);\n  */\n    \n  const readme = wr.getFileWriter('/', 'README.md').raw(`\n# Project ${model.name}\n\nThe project readme.\n\n`);\n\n    wr.getFileWriter('/dist/', 'index.js').raw(`\n// empty stub\n`);\n\n\nwr.getFileWriter('/test/', 'test_base.ts').raw(`\n\nimport { HelloWorld } from '../src/index'\nimport { expect } from 'chai';\n\ndescribe('Hello function', () => {\n  it('should return hello world', () => {\n    expect(HelloWorld()).to.equal('Hello World!');\n  });\n});\n\n`);\n\n  \n    // create the typescript configuration file...\n    wr.getFileWriter('/', 'tsconfig.json').raw(`{\n    \"compilerOptions\": {\n      \"target\": \"es5\",\n      \"moduleResolution\": \"node\",\n      \"module\": \"commonjs\",\n      \"rootDir\": \".\",\n      \"outDir\": \"dist\",\n      \"allowSyntheticDefaultImports\" : true,\n      \"sourceMap\": true,\n      \"inlineSources\": true,    \n      \"declaration\": true,\n      \"emitDecoratorMetadata\": true,\n      \"experimentalDecorators\": true,\n      \"removeComments\": false,\n      \"noImplicitAny\": false,\n      \"jsx\": \"react\",\n      \"lib\": [\"es6\", \"es2015\",\"dom\"]\n    },\n    \"include\": [\n        \"./**/*\",\n    ],  \n    \"exclude\": [\n      \"dist/**/*\",\n      \"node_modules\",\n      \".npm\",\n      \"docs\",\n    ]  \n  }  \n  `, true);\n    // \n    const gitIgnore = wr.getFileWriter('/', '.gitignore');\n    gitIgnore.raw(`\n# Dependency directories\nnode_modules/\n\n# folder files\ndata_folder/\n\n# Image files\n*.jpg\n*.png\n\n# MacOS\n.DS_Store\n.idea/\n\n# TypeScript compiled .map files\n*.map  \n  `);\n    // write the package json file\n    \n    const p = wr.getFileWriter('/', 'package.json');\n    // set the state for the writer based on the params...\n    p.setState({\n      'package.json' : {\n        \"name\": model.name,\n        \"version\": \"1.0.0\",\n        \"description\": model.name,\n        \"main\": \"index.js\",\n        \"scripts\": {\n          \"test\": \"find ./dist/ -name \\\"*.d.ts\\\" -delete && tsc && ./node_modules/.bin/mocha dist/test/ --recursive --reporter spec\"\n        },\n        \"keywords\": [\n        ],\n        \"author\": model.author,\n        \"license\": \"MIT\",\n        \"dependencies\": {\n          \"typescript\": \"^3.0.1\",\n          \"@types/chai\": \"^4.1.4\",\n          \"@types/mocha\": \"^5.2.5\",\n          \"@types/node\": \"^10.5.6\"\n        },\n        \"devDependencies\": {\n          \"chai\": \"^4.1.2\",\n          \"mocha\": \"^5.2.0\"\n        }\n      }\n    })\n\n    // Then at the and, write it\n    p.fn( p => {\n      const model = p.getState()\n      const data = model['package.json']\n      p.raw( JSON.stringify( data, null, 2 ))\n    })\n    \n}\nexports.run = run;\n//# sourceMappingURL=doremifa.js.map"
+  },
+  {
+    "cmd": "tsmodule",
+    "path": ".robowr/data/",
+    "name": "tsmodule.json",
+    "data": "{}"
+  },
+  {
+    "cmd": "tsmodule",
+    "path": "/src/",
+    "name": "index.ts",
+    "data": "\n// the starting point of the applictaion robowatch\n\nexport function HelloWorld() {\n  return 'Hello World!'\n}\n  \n  "
+  },
+  {
+    "cmd": "tsmodule",
+    "path": "/",
+    "name": "README.md",
+    "data": "\n# Project robowatch\n\nThe project readme.\n\n"
+  },
+  {
+    "cmd": "tsmodule",
+    "path": "/dist/",
+    "name": "index.js",
+    "data": "\n// empty stub\n"
+  },
+  {
+    "cmd": "tsmodule",
+    "path": "/test/",
+    "name": "test_base.ts",
+    "data": "\n\nimport { HelloWorld } from '../src/index'\nimport { expect } from 'chai';\n\ndescribe('Hello function', () => {\n  it('should return hello world', () => {\n    expect(HelloWorld()).to.equal('Hello World!');\n  });\n});\n\n"
+  },
+  {
+    "cmd": "tsmodule",
+    "path": "/",
+    "name": "tsconfig.json",
+    "data": "{\n    \"compilerOptions\": {\n      \"target\": \"es5\",\n      \"moduleResolution\": \"node\",\n      \"module\": \"commonjs\",\n      \"rootDir\": \".\",\n      \"outDir\": \"dist\",\n      \"allowSyntheticDefaultImports\" : true,\n      \"sourceMap\": true,\n      \"inlineSources\": true,    \n      \"declaration\": true,\n      \"emitDecoratorMetadata\": true,\n      \"experimentalDecorators\": true,\n      \"removeComments\": false,\n      \"noImplicitAny\": false,\n      \"jsx\": \"react\",\n      \"lib\": [\"es6\", \"es2015\",\"dom\"]\n    },\n    \"include\": [\n        \"./**/*\",\n    ],  \n    \"exclude\": [\n      \"dist/**/*\",\n      \"node_modules\",\n      \".npm\",\n      \"docs\",\n    ]  \n  }  \n  \n"
+  },
+  {
+    "cmd": "tsmodule",
+    "path": "/",
+    "name": ".gitignore",
+    "data": "\n# Dependency directories\nnode_modules/\n\n# folder files\ndata_folder/\n\n# Image files\n*.jpg\n*.png\n\n# MacOS\n.DS_Store\n.idea/\n\n# TypeScript compiled .map files\n*.map  \n  "
+  },
+  {
+    "cmd": "tsmodule",
+    "path": "/",
+    "name": "package.json",
+    "data": "{\n  \"name\": \"robowatch\",\n  \"version\": \"1.0.0\",\n  \"description\": \"robowatch\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"find ./dist/ -name \\\"*.d.ts\\\" -delete && tsc && ./node_modules/.bin/mocha dist/test/ --recursive --reporter spec\"\n  },\n  \"keywords\": [],\n  \"author\": \"Tero Tolonen\",\n  \"license\": \"MIT\",\n  \"dependencies\": {\n    \"typescript\": \"^3.0.1\",\n    \"@types/chai\": \"^4.1.4\",\n    \"@types/mocha\": \"^5.2.5\",\n    \"@types/node\": \"^10.5.6\"\n  },\n  \"devDependencies\": {\n    \"chai\": \"^4.1.2\",\n    \"mocha\": \"^5.2.0\"\n  }\n}"
+  }
+]
