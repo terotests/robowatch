@@ -74,7 +74,6 @@ function TestCompiler() {
                     if (!(_b < _c.length)) return [3 /*break*/, 5];
                     cmd = _c[_b];
                     if (!cmd.string_value) return [3 /*break*/, 4];
-                    console.log("About to run ", cmd.string_value, Date.now());
                     return [4 /*yield*/, exec(cmd.string_value)];
                 case 3:
                     _d = _e.sent(), stdout = _d.stdout, stderr = _d.stderr;

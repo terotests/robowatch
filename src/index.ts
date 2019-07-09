@@ -3,9 +3,6 @@
 import * as R from "ranger-compiler";
 import * as fs from "fs";
 import * as chokidar from "chokidar";
-import { CodeNode } from "ranger-compiler";
-import { parse } from "path";
-
 import * as process from "child_process";
 import * as util from "util";
 
@@ -33,7 +30,6 @@ export function TestCompiler() {
           if (first.vref === "shell" && second.is_block_node) {
             for (const cmd of second.children) {
               if (cmd.string_value) {
-                console.log("About to run ", cmd.string_value, Date.now());
                 const { stdout, stderr } = await exec(cmd.string_value);
                 console.log(stdout);
               }
