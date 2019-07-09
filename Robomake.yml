@@ -1,7 +1,0 @@
-watch src/index.ts {
-shell {
-cd src
-tsc
-npm run build:foo && npm run something
-}
-}
