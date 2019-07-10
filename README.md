@@ -1,6 +1,17 @@
 # Project robowatch
 
-Sample usage
+Install
+
+```
+npm install -g robowatch
+```
+
+Then
+
+1.  Create file `Robo`
+2.  run `rwatch`
+
+# Robo config file
 
 ```
 watch robowatch/README.md {
