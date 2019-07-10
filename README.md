@@ -9,4 +9,10 @@ watch robowatch/README.md {
     'echo "README.md was edited!!!"'
   }
 }
+
+watch src/**.ts {
+  shell {
+    "cd src && tsc"
+  }
+}
 ```
