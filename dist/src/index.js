@@ -51,65 +51,68 @@ function TestCompiler() {
         var w = watchers_1[_i];
         w.close();
     }
-    var sourceFile = new R.SourceCode(fs.readFileSync("Robo", "utf8"));
-    var parser = new R.RangerLispParser(sourceFile);
-    parser.parse(true);
-    var parseDirectoryCommands = function (node) { return __awaiter(_this, void 0, void 0, function () {
-        var _i, _a, ch, first, second, _b, _c, cmd, spinner, _d, stdout, stderr;
-        return __generator(this, function (_e) {
-            switch (_e.label) {
-                case 0:
-                    if (!node) return [3 /*break*/, 6];
-                    _i = 0, _a = node.children;
-                    _e.label = 1;
-                case 1:
-                    if (!(_i < _a.length)) return [3 /*break*/, 6];
-                    ch = _a[_i];
-                    first = ch.getFirst();
-                    second = ch.getSecond();
-                    if (!first) return [3 /*break*/, 5];
-                    if (!(first.vref === "shell" && second.is_block_node)) return [3 /*break*/, 5];
-                    _b = 0, _c = second.children;
-                    _e.label = 2;
-                case 2:
-                    if (!(_b < _c.length)) return [3 /*break*/, 5];
-                    cmd = _c[_b];
-                    if (!cmd.string_value) return [3 /*break*/, 4];
-                    spinner = ora(cmd.string_value).start();
-                    return [4 /*yield*/, exec(cmd.string_value)];
-                case 3:
-                    _d = _e.sent(), stdout = _d.stdout, stderr = _d.stderr;
-                    console.log(stdout);
-                    if (stdout) {
-                        spinner.succeed(stdout);
-                    }
-                    else {
-                        spinner.succeed("Done");
-                    }
-                    _e.label = 4;
-                case 4:
-                    _b++;
-                    return [3 /*break*/, 2];
-                case 5:
-                    _i++;
-                    return [3 /*break*/, 1];
-                case 6: return [2 /*return*/];
+    try {
+        var sourceFile = new R.SourceCode(fs.readFileSync("Robo", "utf8"));
+        var parser = new R.RangerLispParser(sourceFile);
+        parser.parse(true);
+        var parseDirectoryCommands_1 = function (node) { return __awaiter(_this, void 0, void 0, function () {
+            var _i, _a, ch, first, second, _b, _c, cmd, spinner, _d, stdout, stderr;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        if (!node) return [3 /*break*/, 6];
+                        _i = 0, _a = node.children;
+                        _e.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 6];
+                        ch = _a[_i];
+                        first = ch.getFirst();
+                        second = ch.getSecond();
+                        if (!first) return [3 /*break*/, 5];
+                        if (!(first.vref === "shell" && second.is_block_node)) return [3 /*break*/, 5];
+                        _b = 0, _c = second.children;
+                        _e.label = 2;
+                    case 2:
+                        if (!(_b < _c.length)) return [3 /*break*/, 5];
+                        cmd = _c[_b];
+                        if (!cmd.string_value) return [3 /*break*/, 4];
+                        spinner = ora(cmd.string_value).start();
+                        return [4 /*yield*/, exec(cmd.string_value)];
+                    case 3:
+                        _d = _e.sent(), stdout = _d.stdout, stderr = _d.stderr;
+                        console.log(stdout);
+                        if (stdout) {
+                            spinner.succeed(stdout);
+                        }
+                        else {
+                            spinner.succeed("Done");
+                        }
+                        _e.label = 4;
+                    case 4:
+                        _b++;
+                        return [3 /*break*/, 2];
+                    case 5:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        }); };
+        parser.rootNode.children.forEach(function (node, index) {
+            var first = node.getFirst();
+            var second = node.getSecond();
+            if (first && first.vref === "watch") {
+                var watcher = chokidar
+                    .watch(second.vref)
+                    .on("change", function (event, path) {
+                    // console.log(event, path);
+                    parseDirectoryCommands_1(node.children[2]);
+                });
+                watchers.push(watcher);
             }
         });
-    }); };
-    parser.rootNode.children.forEach(function (node, index) {
-        var first = node.getFirst();
-        var second = node.getSecond();
-        if (first && first.vref === "watch") {
-            var watcher = chokidar
-                .watch(second.vref)
-                .on("change", function (event, path) {
-                // console.log(event, path);
-                parseDirectoryCommands(node.children[2]);
-            });
-            watchers.push(watcher);
-        }
-    });
+    }
+    catch (e) { }
 }
 exports.TestCompiler = TestCompiler;
 chokidar.watch("Robo").on("all", function (event, path) {

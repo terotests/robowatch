@@ -17,49 +17,50 @@ export function TestCompiler() {
     w.close();
   }
 
-  const sourceFile = new R.SourceCode(fs.readFileSync("Robo", "utf8"));
+  try {
+    const sourceFile = new R.SourceCode(fs.readFileSync("Robo", "utf8"));
+    const parser = new R.RangerLispParser(sourceFile);
+    parser.parse(true);
 
-  const parser = new R.RangerLispParser(sourceFile);
-  parser.parse(true);
-
-  const parseDirectoryCommands = async (node?: R.CodeNode) => {
-    if (node) {
-      for (const ch of node.children) {
-        const first = ch.getFirst();
-        const second = ch.getSecond();
-        if (first) {
-          if (first.vref === "shell" && second.is_block_node) {
-            for (const cmd of second.children) {
-              if (cmd.string_value) {
-                const spinner = ora(cmd.string_value).start();
-                const { stdout, stderr } = await exec(cmd.string_value);
-                console.log(stdout);
-                if (stdout) {
-                  spinner.succeed(stdout);
-                } else {
-                  spinner.succeed("Done");
+    const parseDirectoryCommands = async (node?: R.CodeNode) => {
+      if (node) {
+        for (const ch of node.children) {
+          const first = ch.getFirst();
+          const second = ch.getSecond();
+          if (first) {
+            if (first.vref === "shell" && second.is_block_node) {
+              for (const cmd of second.children) {
+                if (cmd.string_value) {
+                  const spinner = ora(cmd.string_value).start();
+                  const { stdout, stderr } = await exec(cmd.string_value);
+                  console.log(stdout);
+                  if (stdout) {
+                    spinner.succeed(stdout);
+                  } else {
+                    spinner.succeed("Done");
+                  }
                 }
               }
             }
           }
         }
       }
-    }
-  };
+    };
 
-  parser.rootNode.children.forEach((node, index) => {
-    const first = node.getFirst();
-    const second = node.getSecond();
-    if (first && first.vref === "watch") {
-      const watcher = chokidar
-        .watch(second.vref)
-        .on("change", (event, path) => {
-          // console.log(event, path);
-          parseDirectoryCommands(node.children[2]);
-        });
-      watchers.push(watcher);
-    }
-  });
+    parser.rootNode.children.forEach((node, index) => {
+      const first = node.getFirst();
+      const second = node.getSecond();
+      if (first && first.vref === "watch") {
+        const watcher = chokidar
+          .watch(second.vref)
+          .on("change", (event, path) => {
+            // console.log(event, path);
+            parseDirectoryCommands(node.children[2]);
+          });
+        watchers.push(watcher);
+      }
+    });
+  } catch (e) {}
 }
 
 chokidar.watch("Robo").on("all", (event, path) => {
