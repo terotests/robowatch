@@ -11,7 +11,7 @@ Then
 1.  Create file `Robo`
 2.  run `rwatch`
 
-# Robo config file
+# Robo file
 
 ```
 watch robowatch/README.md {
