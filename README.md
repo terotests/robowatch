@@ -1,5 +1,11 @@
 # Robowatch
 
+Configurable filesystem observer.
+
+- Listens to changes to the filesystem
+- Runs shell commands based on the changed files
+- Can reload it's own configuration dynamically
+
 ## Getting Started
 
 First install the command line utility `rwatch`
