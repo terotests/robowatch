@@ -5,11 +5,3 @@ watch src/**.ts {
     "cd src && tsc"
   }
 }
-
-; testing ts2redux compiler
-watch src/redux/**.ts {
-  shell {
-    "ts2redux src/redux"
-    'echo "OK, looks good so far"'
-  }
-}
