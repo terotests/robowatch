@@ -1,25 +1,16 @@
-# Project robowatch
+# Robowatch
 
-Install
+## Getting Started
+
+First install the command line utility `rwatch`
 
 ```
 npm install -g robowatch
 ```
 
-Then
-
-1.  Create file `Robo`
-2.  run `rwatch`
-
-# Robo file
+Then create a file `Robo` with watch instructions, following the [chokidar](https://github.com/paulmillr/chokidar) format.
 
 ```
-watch robowatch/README.md {
-  shell {
-    'cd robowatch && git add README.md && git commit -m "README update" && git push'
-    'echo "README.md was edited!!!"'
-  }
-}
 
 watch src/**.ts {
   shell {
