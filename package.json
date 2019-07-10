@@ -1,6 +1,6 @@
 {
-  "name": "@terotests/robowatch",
-  "version": "1.0.0",
+  "name": "robowatch",
+  "version": "1.0.3",
   "description": "robowatch",
   "main": "index.js",
   "scripts": {
