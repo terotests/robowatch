@@ -6,6 +6,8 @@ Configurable filesystem observer.
 - Runs shell commands based on the changed files
 - Can reload it's own configuration dynamically
 
+You can use it to create local build pipelines, automatic test runs etc.
+
 ## Getting Started
 
 First install the command line utility `rwatch`
