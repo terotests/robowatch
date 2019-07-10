@@ -41,6 +41,7 @@ var fs = require("fs");
 var chokidar = require("chokidar");
 var process = require("child_process");
 var util = require("util");
+var ora = require("ora");
 var exec = util.promisify(process.exec);
 var watchers = [];
 function TestCompiler() {
@@ -54,7 +55,7 @@ function TestCompiler() {
     var parser = new R.RangerLispParser(sourceFile);
     parser.parse(true);
     var parseDirectoryCommands = function (node) { return __awaiter(_this, void 0, void 0, function () {
-        var _i, _a, ch, first, second, _b, _c, cmd, _d, stdout, stderr;
+        var _i, _a, ch, first, second, _b, _c, cmd, spinner, _d, stdout, stderr;
         return __generator(this, function (_e) {
             switch (_e.label) {
                 case 0:
@@ -74,10 +75,17 @@ function TestCompiler() {
                     if (!(_b < _c.length)) return [3 /*break*/, 5];
                     cmd = _c[_b];
                     if (!cmd.string_value) return [3 /*break*/, 4];
+                    spinner = ora(cmd.string_value).start();
                     return [4 /*yield*/, exec(cmd.string_value)];
                 case 3:
                     _d = _e.sent(), stdout = _d.stdout, stderr = _d.stderr;
                     console.log(stdout);
+                    if (stdout) {
+                        spinner.succeed(stdout);
+                    }
+                    else {
+                        spinner.succeed("Done");
+                    }
                     _e.label = 4;
                 case 4:
                     _b++;

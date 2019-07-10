@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as chokidar from "chokidar";
 import * as process from "child_process";
 import * as util from "util";
+import * as ora from "ora";
 
 const exec = util.promisify(process.exec);
 
@@ -30,8 +31,14 @@ export function TestCompiler() {
           if (first.vref === "shell" && second.is_block_node) {
             for (const cmd of second.children) {
               if (cmd.string_value) {
+                const spinner = ora(cmd.string_value).start();
                 const { stdout, stderr } = await exec(cmd.string_value);
                 console.log(stdout);
+                if (stdout) {
+                  spinner.succeed(stdout);
+                } else {
+                  spinner.succeed("Done");
+                }
               }
             }
           }
