@@ -1,5 +1,4 @@
-# Information about the releases
+# 2019-07-11
 
-- test line 1
-- test line 2
-- test line 3
+- support for debounce
+- support fot `$FILE`
