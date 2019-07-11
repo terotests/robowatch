@@ -22,7 +22,28 @@ Then create a file `Robo` with watch instructions, following the [chokidar](http
 
 watch src/**.ts {
   shell {
+    debounce 3 "waiting 3 seconds"
     "cd src && tsc"
+  }
+}
+```
+
+## debounce
+
+Wait some seconds before starting
+
+```
+ debounce 3 "waiting 3 seconds"
+```
+
+## \$FILE
+
+Show the changed filename
+
+```
+watch src/**.ts {
+  shell {
+    'echo "$FILE"'
   }
 }
 ```
