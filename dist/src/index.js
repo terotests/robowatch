@@ -35,6 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var R = require("ranger-compiler");
 var fs = require("fs");
@@ -43,7 +44,65 @@ var process = require("child_process");
 var util = require("util");
 var ora = require("ora");
 var exec = util.promisify(process.exec);
+var spawn = util.promisify(process.spawn);
 var watchers = [];
+var lookForBlockCommand = function (cmd, node, cb) { return __awaiter(_this, void 0, void 0, function () {
+    var opts, i, vname, _i, _a, ch;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                if (!node) return [3 /*break*/, 5];
+                if (!(node.children[0] && node.children[0].vref === cmd)) return [3 /*break*/, 5];
+                opts = {};
+                i = 0;
+                vname = "";
+                _i = 0, _a = node.children.slice(1);
+                _b.label = 1;
+            case 1:
+                if (!(_i < _a.length)) return [3 /*break*/, 5];
+                ch = _a[_i];
+                if (!ch.is_block_node) return [3 /*break*/, 3];
+                return [4 /*yield*/, cb(ch, opts)];
+            case 2:
+                _b.sent();
+                return [3 /*break*/, 4];
+            case 3:
+                if (i === 0) {
+                    if (ch.vref) {
+                        vname = ch.vref;
+                    }
+                    i++;
+                }
+                else {
+                    opts[vname] = ch;
+                    i = 0;
+                }
+                _b.label = 4;
+            case 4:
+                _i++;
+                return [3 /*break*/, 1];
+            case 5: return [2 /*return*/];
+        }
+    });
+}); };
+var lookForCommand = function (cmd, node, cb) { return __awaiter(_this, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                if (!node) return [3 /*break*/, 2];
+                if (!(node.children[0] && node.children[0].vref === cmd)) return [3 /*break*/, 2];
+                return [4 /*yield*/, cb(node)];
+            case 1:
+                _a.sent();
+                _a.label = 2;
+            case 2: return [2 /*return*/];
+        }
+    });
+}); };
+var debouncers = new WeakMap();
+var resolveInSeconds = function (secs) {
+    return new Promise(function (resolve) { return setTimeout(resolve, secs * 1000); });
+};
 function TestCompiler() {
     var _this = this;
     // read the makefile
@@ -55,46 +114,124 @@ function TestCompiler() {
         var sourceFile = new R.SourceCode(fs.readFileSync("Robo", "utf8"));
         var parser = new R.RangerLispParser(sourceFile);
         parser.parse(true);
-        var parseDirectoryCommands_1 = function (node) { return __awaiter(_this, void 0, void 0, function () {
-            var _i, _a, ch, first, second, _b, _c, cmd, spinner, _d, stdout, stderr;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+        var parseDirectoryCommands_1 = function (node, fileName) { return __awaiter(_this, void 0, void 0, function () {
+            var _loop_1, _i, _a, ch, e_1;
+            var _this = this;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
-                        if (!node) return [3 /*break*/, 6];
-                        _i = 0, _a = node.children;
-                        _e.label = 1;
+                        if (!node) return [3 /*break*/, 7];
+                        _b.label = 1;
                     case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 6];
-                        ch = _a[_i];
-                        first = ch.getFirst();
-                        second = ch.getSecond();
-                        if (!first) return [3 /*break*/, 5];
-                        if (!(first.vref === "shell" && second.is_block_node)) return [3 /*break*/, 5];
-                        _b = 0, _c = second.children;
-                        _e.label = 2;
+                        _b.trys.push([1, 6, , 7]);
+                        _loop_1 = function (ch) {
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, lookForBlockCommand("shell", ch, function (block, opts) { return __awaiter(_this, void 0, void 0, function () {
+                                            var _i, _a, cmd, spinner, _b, stdout, stderr;
+                                            var _this = this;
+                                            return __generator(this, function (_c) {
+                                                switch (_c.label) {
+                                                    case 0:
+                                                        _i = 0, _a = block.children;
+                                                        _c.label = 1;
+                                                    case 1:
+                                                        if (!(_i < _a.length)) return [3 /*break*/, 6];
+                                                        cmd = _a[_i];
+                                                        return [4 /*yield*/, lookForCommand("debounce", cmd, function (cmd) { return __awaiter(_this, void 0, void 0, function () {
+                                                                var secs, awaiter, msg, spinner;
+                                                                return __generator(this, function (_a) {
+                                                                    switch (_a.label) {
+                                                                        case 0:
+                                                                            secs = cmd.children[1].int_value ||
+                                                                                cmd.children[1].double_value ||
+                                                                                0;
+                                                                            if (debouncers.get(ch)) {
+                                                                                debouncers.set(ch, resolveInSeconds(secs));
+                                                                                throw "skipping";
+                                                                            }
+                                                                            awaiter = resolveInSeconds(secs);
+                                                                            msg = (cmd.children[2] && cmd.children[2].string_value) ||
+                                                                                "waiting " + secs + " seconds";
+                                                                            debouncers.set(ch, awaiter);
+                                                                            spinner = ora(msg).start();
+                                                                            return [4 /*yield*/, awaiter];
+                                                                        case 1:
+                                                                            _a.sent();
+                                                                            _a.label = 2;
+                                                                        case 2:
+                                                                            if (!(awaiter !== debouncers.get(ch))) return [3 /*break*/, 4];
+                                                                            awaiter = debouncers.get(ch);
+                                                                            return [4 /*yield*/, awaiter];
+                                                                        case 3:
+                                                                            _a.sent();
+                                                                            return [3 /*break*/, 2];
+                                                                        case 4:
+                                                                            debouncers.delete(ch);
+                                                                            spinner.succeed(msg);
+                                                                            return [2 /*return*/];
+                                                                    }
+                                                                });
+                                                            }); })];
+                                                    case 2:
+                                                        _c.sent();
+                                                        return [4 /*yield*/, lookForCommand("log", cmd, function (cmd) { return __awaiter(_this, void 0, void 0, function () {
+                                                                var spinner;
+                                                                return __generator(this, function (_a) {
+                                                                    spinner = ora("").start();
+                                                                    spinner.info(cmd.children[1].string_value);
+                                                                    return [2 /*return*/];
+                                                                });
+                                                            }); })];
+                                                    case 3:
+                                                        _c.sent();
+                                                        if (!cmd.string_value) return [3 /*break*/, 5];
+                                                        spinner = ora(cmd.string_value).start();
+                                                        return [4 /*yield*/, exec("FILE=\"" + fileName + "\"; " + cmd.string_value)];
+                                                    case 4:
+                                                        _b = _c.sent(), stdout = _b.stdout, stderr = _b.stderr;
+                                                        if (stderr) {
+                                                            spinner.fail(String(stderr));
+                                                        }
+                                                        else {
+                                                            if (stdout) {
+                                                                spinner.succeed(stdout);
+                                                            }
+                                                            else {
+                                                                spinner.succeed("Done");
+                                                            }
+                                                        }
+                                                        _c.label = 5;
+                                                    case 5:
+                                                        _i++;
+                                                        return [3 /*break*/, 1];
+                                                    case 6: return [2 /*return*/];
+                                                }
+                                            });
+                                        }); })];
+                                    case 1:
+                                        _a.sent();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        };
+                        _i = 0, _a = node.children;
+                        _b.label = 2;
                     case 2:
-                        if (!(_b < _c.length)) return [3 /*break*/, 5];
-                        cmd = _c[_b];
-                        if (!cmd.string_value) return [3 /*break*/, 4];
-                        spinner = ora(cmd.string_value).start();
-                        return [4 /*yield*/, exec(cmd.string_value)];
+                        if (!(_i < _a.length)) return [3 /*break*/, 5];
+                        ch = _a[_i];
+                        return [5 /*yield**/, _loop_1(ch)];
                     case 3:
-                        _d = _e.sent(), stdout = _d.stdout, stderr = _d.stderr;
-                        console.log(stdout);
-                        if (stdout) {
-                            spinner.succeed(stdout);
-                        }
-                        else {
-                            spinner.succeed("Done");
-                        }
-                        _e.label = 4;
+                        _b.sent();
+                        _b.label = 4;
                     case 4:
-                        _b++;
-                        return [3 /*break*/, 2];
-                    case 5:
                         _i++;
-                        return [3 /*break*/, 1];
-                    case 6: return [2 /*return*/];
+                        return [3 /*break*/, 2];
+                    case 5: return [3 /*break*/, 7];
+                    case 6:
+                        e_1 = _b.sent();
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         }); };
@@ -105,8 +242,8 @@ function TestCompiler() {
                 var watcher = chokidar
                     .watch(second.vref)
                     .on("change", function (event, path) {
-                    // console.log(event, path);
-                    parseDirectoryCommands_1(node.children[2]);
+                    // console.log("change ", event);
+                    parseDirectoryCommands_1(node.children[2], event);
                 });
                 watchers.push(watcher);
             }

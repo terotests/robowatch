@@ -1,11 +1,12 @@
 {
   "name": "robowatch",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "robowatch",
   "main": "index.js",
   "scripts": {
+    "tsc": "tsc",
     "hello": "echo \"Hello World\"",
-    "test": "find ./dist/ -name \"*.d.ts\" -delete && tsc && ./node_modules/.bin/mocha dist/test/ --recursive --reporter spec"
+    "test": "npm run tsc"
   },
   "bin": {
     "rwatch": "dist/src/index.js"
@@ -14,16 +15,10 @@
   "author": "Tero Tolonen",
   "license": "MIT",
   "dependencies": {
-    "@types/chai": "^4.1.4",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^10.5.6",
     "chokidar": "^3.0.2",
     "ora": "^3.4.0",
     "ranger-compiler": "^2.1.70",
     "typescript": "^3.0.1"
   },
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "mocha": "^5.2.0"
-  }
+  "devDependencies": {}
 }
