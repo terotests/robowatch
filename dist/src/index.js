@@ -187,7 +187,11 @@ function TestCompiler() {
                                                         _c.sent();
                                                         if (!cmd.string_value) return [3 /*break*/, 5];
                                                         spinner = ora(cmd.string_value).start();
-                                                        return [4 /*yield*/, exec("FILE=\"" + fileName + "\"; " + cmd.string_value)];
+                                                        return [4 /*yield*/, exec("FILE=\"" + fileName + "\"; " + cmd.string_value, {
+                                                                shell: opts["use"]
+                                                                    ? opts["use"].string_value
+                                                                    : "/bin/bash"
+                                                            })];
                                                     case 4:
                                                         _b = _c.sent(), stdout = _b.stdout, stderr = _b.stderr;
                                                         if (stderr) {

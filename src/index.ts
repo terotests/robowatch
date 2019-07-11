@@ -112,7 +112,12 @@ export function TestCompiler() {
                 if (cmd.string_value) {
                   const spinner = ora(cmd.string_value).start();
                   const { stdout, stderr } = await exec(
-                    `FILE="${fileName}"; ${cmd.string_value}`
+                    `FILE="${fileName}"; ${cmd.string_value}`,
+                    {
+                      shell: opts["use"]
+                        ? opts["use"].string_value
+                        : "/bin/bash"
+                    }
                   );
                   if (stderr) {
                     spinner.fail(String(stderr));
