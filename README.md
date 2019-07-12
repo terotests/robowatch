@@ -82,7 +82,8 @@ watch (
 
 ## debounce
 
-Wait some seconds before starting
+Debounce will some seconds before starting. If new events arrive the
+startup is delayed N seconds more.
 
 ```
  debounce 3 "waiting 3 seconds"
