@@ -1,10 +1,12 @@
 # Robowatch
 
-Configurable filesystem observer.
+Configurable filesystem observer and script runner.
 
-- Listens to changes to the filesystem
-- Runs shell commands based on the changed files
-- Can reload it's own configuration dynamically
+- Listens to changes to the filesystem and runs scripts based on events defined in `Robo` -file
+- Multiple files and directory trees can be followed
+- Ignore pattern `!something`
+- Events can be delayed using `bounce`
+- Configuration changes are loaded dynamically
 
 You can use it to create local build pipelines, automatic test runs etc.
 
@@ -28,6 +30,31 @@ watch src/**.ts {
 }
 ```
 
+## Comments
+
+```
+; here is a comment
+watch somefile {
+
+}
+```
+
+## Running commands in the shell
+
+Multiple commands can be run seperately o
+
+```
+watch somefile {
+  shell {
+    'ls -al'
+    `cd dir;
+
+
+    `
+  }
+}
+```
+
 ## debounce
 
 Wait some seconds before starting
@@ -43,8 +70,38 @@ Show the changed filename
 ```
 watch src/**.ts {
   shell {
-    'echo "$FILE"'
+    `
+      echo $(dirname "$FILE");
+      echo $FILE;
+    `
   }
+}
+```
+
+## Multiple files
+
+Multiple files can be observer
+
+```
+watch (
+    file1
+    file2
+    robowatch/src/**/*.ts
+  ) {
+
+}
+```
+
+## Ignoring files
+
+Do not follow changes in node_modules
+
+```
+watch (
+    ./**.ts
+    !./**/node_modules/**
+  ) {
+
 }
 ```
 
