@@ -56,7 +56,7 @@ Example uses MacOS `osascript` to display messages to user
 
 ```
 watch (
-    !node_modules/**
+    !./**/node_modules/**
     ./**/package.json
   ) {
   shell use "/bin/bash" {
@@ -67,13 +67,13 @@ watch (
       cd $DIR;
       RVOF=$(npm audit);
       retVal=$?
-      if [ $retVal -eq 1 ]; then
+      if [ $retVal -ne 0 ]; then
         MSG='say "You loser! npm audit for ';
         MSG+="$FILE";
         MSG+=' failed"';
         echo "$MSG" | osascript;
       else
-        MSG='display notification "npm audit for ';
+        MSG='display notification "✅ npm audit for ';
         MSG+="$FILE";
         MSG+=' was success!"';
         echo "$MSG" | osascript;
