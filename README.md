@@ -46,13 +46,32 @@ Multiple commands can be run seperately o
 ```
 watch somefile {
   shell {
+    ; single quotes
     'ls -al'
+
+    ; double quotes
+    "ls -al"
+
+    ; back-trick
     `cd dir;
-
-
+      echo $(dirname "$FILE");
+      echo $FILE;
     `
+
   }
 }
+```
+
+## Select the shell
+
+The shell command can have `use "/bin/bash"` to select the running shell
+
+```
+watch (
+    !./**/node_modules/**
+    ./**/package.json
+  ) {
+  shell use "/bin/bash" {
 ```
 
 ## debounce
