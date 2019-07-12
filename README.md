@@ -47,3 +47,38 @@ watch src/**.ts {
   }
 }
 ```
+
+# Examples
+
+## Audit package.json files
+
+Example uses MacOS `osascript` to display messages to user
+
+```
+watch (
+    !node_modules/**
+    ./**/package.json
+  ) {
+  shell use "/bin/bash" {
+    debounce 5 "auditing package.json"
+    `
+      DIR=$(dirname "$FILE");
+      echo $DIR;
+      cd $DIR;
+      RVOF=$(npm audit);
+      retVal=$?
+      if [ $retVal -eq 1 ]; then
+        MSG='say "You loser! npm audit for ';
+        MSG+="$FILE";
+        MSG+=' failed"';
+        echo "$MSG" | osascript;
+      else
+        MSG='display notification "npm audit for ';
+        MSG+="$FILE";
+        MSG+=' was success!"';
+        echo "$MSG" | osascript;
+      fi;
+    `
+  }
+}
+```
