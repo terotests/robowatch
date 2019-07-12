@@ -41,7 +41,9 @@ watch somefile {
 
 ## Running commands in the shell
 
-Multiple commands can be run seperately o
+Pure Shell commands are quoted like `'echo "Hello World"'`
+
+Each quoted command is run as separate exec under selected shell.
 
 ```
 watch somefile {
