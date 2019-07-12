@@ -72,6 +72,10 @@ watch (
     ./**/package.json
   ) {
   shell use "/bin/bash" {
+    ; display which shell we are using
+    'echo $0'
+  }
+}
 ```
 
 ## debounce
