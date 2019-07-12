@@ -7,6 +7,7 @@ Configurable filesystem observer and script runner.
 - Ignore pattern `!something`
 - Events can be delayed using `bounce`
 - Configuration changes are loaded dynamically
+- You can have comments like `; here is explanation what this should do`
 
 You can use it to create local build pipelines, automatic test runs etc.
 
