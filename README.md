@@ -5,7 +5,7 @@ Configurable filesystem observer and script runner.
 - Listens to changes to the filesystem and runs scripts based on events defined in `Robo` -file
 - Multiple files and directory trees can be followed
 - Ignore pattern `!something`
-- Events can be delayed using `bounce`
+- Events can be delayed using `debounce`
 - Configuration changes are loaded dynamically
 - You can have comments like `; here is explanation what this should do`
 
