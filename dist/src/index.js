@@ -115,12 +115,13 @@ function TestCompiler() {
         var parser = new R.RangerLispParser(sourceFile);
         parser.parse(true);
         var parseDirectoryCommands_1 = function (node, fileName) { return __awaiter(_this, void 0, void 0, function () {
-            var _loop_1, _i, _a, ch, e_1;
+            var spinners_1, _loop_1, _i, _a, ch, e_1;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         if (!node) return [3 /*break*/, 7];
+                        spinners_1 = [];
                         _b.label = 1;
                     case 1:
                         _b.trys.push([1, 6, , 7]);
@@ -155,6 +156,7 @@ function TestCompiler() {
                                                                                 "waiting " + secs + " seconds";
                                                                             debouncers.set(ch, awaiter);
                                                                             spinner = ora(msg).start();
+                                                                            spinners_1.push(spinner);
                                                                             return [4 /*yield*/, awaiter];
                                                                         case 1:
                                                                             _a.sent();
@@ -179,6 +181,7 @@ function TestCompiler() {
                                                                 var spinner;
                                                                 return __generator(this, function (_a) {
                                                                     spinner = ora("").start();
+                                                                    spinners_1.push(spinner);
                                                                     spinner.info(cmd.children[1].string_value);
                                                                     return [2 /*return*/];
                                                                 });
@@ -187,9 +190,10 @@ function TestCompiler() {
                                                         _c.sent();
                                                         if (!cmd.string_value) return [3 /*break*/, 5];
                                                         spinner = ora(cmd.string_value).start();
+                                                        spinners_1.push(spinner);
                                                         return [4 /*yield*/, exec("FILE=\"" + fileName + "\"; " + cmd.string_value, {
                                                                 shell: opts["use"]
-                                                                    ? opts["use"].string_value
+                                                                    ? opts["use"].string_value || opts["use"].vref
                                                                     : "/bin/bash"
                                                             })];
                                                     case 4:
@@ -202,7 +206,7 @@ function TestCompiler() {
                                                                 spinner.succeed(stdout);
                                                             }
                                                             else {
-                                                                spinner.succeed("Done");
+                                                                spinner.succeed(cmd.string_value);
                                                             }
                                                         }
                                                         _c.label = 5;
@@ -234,6 +238,9 @@ function TestCompiler() {
                     case 5: return [3 /*break*/, 7];
                     case 6:
                         e_1 = _b.sent();
+                        spinners_1.forEach(function (s) {
+                            s.fail();
+                        });
                         return [3 /*break*/, 7];
                     case 7: return [2 /*return*/];
                 }
@@ -241,13 +248,35 @@ function TestCompiler() {
         }); };
         parser.rootNode.children.forEach(function (node, index) {
             var first = node.getFirst();
-            var second = node.getSecond();
+            var args = node.children.slice(1).filter(function (n) { return !n.is_block_node; });
+            var block = node.children.slice(1).filter(function (n) { return n.is_block_node; });
+            var files = [];
+            var parseArg = function (a) {
+                if (a.string_value) {
+                    files.push(a.string_value);
+                }
+                if (a.vref) {
+                    files.push(a.vref);
+                }
+            };
+            args.forEach(function (a, index) {
+                if (a.children.length > 0) {
+                    a.children.forEach(parseArg);
+                }
+                else {
+                    parseArg(a);
+                }
+            });
             if (first && first.vref === "watch") {
                 var watcher = chokidar
-                    .watch(second.vref)
+                    .watch(files.filter(function (f) { return !(f.charAt(0) === "!"); }), {
+                    ignored: files
+                        .filter(function (f) { return f.charAt(0) === "!"; })
+                        .map(function (f) { return f.substring(1); })
+                })
                     .on("change", function (event, path) {
                     // console.log("change ", event);
-                    parseDirectoryCommands_1(node.children[2], event);
+                    parseDirectoryCommands_1(block[0], event);
                 });
                 watchers.push(watcher);
             }

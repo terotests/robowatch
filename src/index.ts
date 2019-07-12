@@ -78,6 +78,7 @@ export function TestCompiler() {
       fileName?: string
     ) => {
       if (node) {
+        const spinners: ora.Ora[] = [];
         try {
           for (const ch of node.children) {
             await lookForBlockCommand("shell", ch, async (block, opts) => {
@@ -97,6 +98,7 @@ export function TestCompiler() {
                     `waiting ${secs} seconds`;
                   debouncers.set(ch, awaiter);
                   const spinner = ora(msg).start();
+                  spinners.push(spinner);
                   await awaiter;
                   while (awaiter !== debouncers.get(ch)) {
                     awaiter = debouncers.get(ch);
@@ -107,15 +109,17 @@ export function TestCompiler() {
                 });
                 await lookForCommand("log", cmd, async cmd => {
                   const spinner = ora("").start();
+                  spinners.push(spinner);
                   spinner.info(cmd.children[1].string_value);
                 });
                 if (cmd.string_value) {
                   const spinner = ora(cmd.string_value).start();
+                  spinners.push(spinner);
                   const { stdout, stderr } = await exec(
                     `FILE="${fileName}"; ${cmd.string_value}`,
                     {
                       shell: opts["use"]
-                        ? opts["use"].string_value
+                        ? opts["use"].string_value || opts["use"].vref
                         : "/bin/bash"
                     }
                   );
@@ -125,33 +129,54 @@ export function TestCompiler() {
                     if (stdout) {
                       spinner.succeed(stdout);
                     } else {
-                      spinner.succeed("Done");
+                      spinner.succeed(cmd.string_value);
                     }
                   }
-
-                  // console.log(stdout);
-                  // if (stdout) {
-                  //   spinner.succeed(stdout);
-                  // } else {
-                  //   spinner.succeed("Done");
-                  // }
                 }
               }
             });
           }
-        } catch (e) {}
+        } catch (e) {
+          spinners.forEach(s => {
+            s.fail();
+          });
+        }
       }
     };
 
     parser.rootNode.children.forEach((node, index) => {
       const first = node.getFirst();
-      const second = node.getSecond();
+
+      const args = node.children.slice(1).filter(n => !n.is_block_node);
+      const block = node.children.slice(1).filter(n => n.is_block_node);
+
+      const files: string[] = [];
+      const parseArg = (a: R.CodeNode) => {
+        if (a.string_value) {
+          files.push(a.string_value);
+        }
+        if (a.vref) {
+          files.push(a.vref);
+        }
+      };
+      args.forEach((a, index) => {
+        if (a.children.length > 0) {
+          a.children.forEach(parseArg);
+        } else {
+          parseArg(a);
+        }
+      });
+
       if (first && first.vref === "watch") {
         const watcher = chokidar
-          .watch(second.vref)
+          .watch(files.filter(f => !(f.charAt(0) === "!")), {
+            ignored: files
+              .filter(f => f.charAt(0) === "!")
+              .map(f => f.substring(1))
+          })
           .on("change", (event, path) => {
             // console.log("change ", event);
-            parseDirectoryCommands(node.children[2], event);
+            parseDirectoryCommands(block[0], event);
           });
         watchers.push(watcher);
       }
