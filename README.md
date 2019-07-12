@@ -90,6 +90,14 @@ startup is delayed N seconds more.
  debounce 3 "waiting 3 seconds"
 ```
 
+example
+
+```
+watch *.css {
+  shell use "/bin/bash" {
+    debounce 5 "waiting before "
+```
+
 ## \$FILE
 
 Show the changed filename
