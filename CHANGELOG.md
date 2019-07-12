@@ -4,6 +4,7 @@
 - support for string arguments for file lists
 - support for multiple arguments
 - fail indicator in case of exceptions
+- documentation updates
 
 # 2019-07-11
 
