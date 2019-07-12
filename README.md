@@ -90,7 +90,7 @@ startup is delayed N seconds more.
  debounce 3 "waiting 3 seconds"
 ```
 
-example
+Example
 
 ```
 watch *.css {
