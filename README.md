@@ -1,6 +1,6 @@
 # Robowatch
 
-Configurable filesystem observer. NOTE: this is just the first version, more feaures will come soon.
+Configurable filesystem observer.
 
 - Listens to changes to the filesystem
 - Runs shell commands based on the changed files
