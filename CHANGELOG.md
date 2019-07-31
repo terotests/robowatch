@@ -1,3 +1,7 @@
+# 2019-07-31
+
+- Support for Facebooks Watchman -service added
+
 # 2019-07-12
 
 - added support for ignoring files `!ignore`
