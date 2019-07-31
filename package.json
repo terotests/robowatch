@@ -1,6 +1,6 @@
 {
   "name": "robowatch",
-  "version": "1.0.13",
+  "version": "1.0.18",
   "description": "robowatch",
   "main": "index.js",
   "scripts": {
@@ -18,10 +18,14 @@
   "author": "Tero Tolonen",
   "license": "MIT",
   "dependencies": {
+    "anymatch": "^3.0.3",
     "chokidar": "^3.0.2",
+    "fb-watchman": "^2.0.0",
     "ora": "^3.4.0",
     "ranger-compiler": "^2.1.70",
     "typescript": "^3.0.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/fb-watchman": "^2.0.0"
+  }
 }

@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-export declare function TestCompiler(): void;
+export declare function TestCompiler(): Promise<void>;

@@ -2,18 +2,122 @@
 
 import * as R from "ranger-compiler";
 import * as fs from "fs";
+import * as path from "path";
 import * as chokidar from "chokidar";
-import * as process from "child_process";
+import * as childProcess from "child_process";
 import * as util from "util";
 import * as ora from "ora";
+import * as watchman from "fb-watchman";
+import anymatch from "anymatch";
 
-const exec = util.promisify(process.exec);
-const spawn = util.promisify(process.spawn);
+require("events").EventEmitter.prototype._maxListeners = 100;
 
+const exec = util.promisify(childProcess.exec);
+const spawn = util.promisify(childProcess.spawn);
+const watchmanClient = new watchman.Client();
+
+let watcherType: "chokidar" | "watchman" = "chokidar";
+let subCnt = 1;
 const watchers: Array<chokidar.FSWatcher> = [];
+const unsubscribers: Array<() => void> = [];
+const testers: Array<(resp: WatchResponse) => void> = [];
 
 interface CommandOptions {
   [key: string]: R.CodeNode;
+}
+
+interface Watch {
+  watch: any;
+  relative_path: string;
+}
+
+interface ChangedFile {
+  name: string;
+  size: number;
+  exists: boolean;
+  type: string;
+}
+
+// { root: '/private/tmp/foo',
+//   subscription: 'mysubscription',
+//   files: [ { name: 'node_modules/fb-watchman/index.js',
+//       size: 4768,
+//       exists: true,
+//       type: 'f' } ] }
+
+interface WatchResponse {
+  root: string;
+  subscription: string;
+  files: ChangedFile[];
+  is_fresh_instance: boolean;
+}
+
+// create a watch for a certain directory
+async function WatchmanWatch(directoryName: string): Promise<Watch> {
+  return (await new Promise((resolve, reject) => {
+    watchmanClient.command(["watch-project", directoryName], function(
+      error,
+      resp
+    ) {
+      if (error) {
+        console.error("Error initiating watch:", error);
+        reject(error);
+        return;
+      }
+      if ("warning" in resp) {
+        console.log("warning: ", resp.warning);
+      }
+      resolve(resp as Watch);
+    });
+  })) as Watch;
+}
+
+async function WatchmanSubscribe(
+  watcherInstance: Watch,
+  name: string,
+  expression: any[],
+  onEvent: (resp: WatchResponse) => void
+) {
+  return new Promise((resolve, reject) => {
+    const watch = watcherInstance.watch;
+    const relative_path = watcherInstance.relative_path;
+
+    const sub = {
+      // Match any `.js` file in the dir_of_interest
+      expression,
+      // Which fields we're interested in
+      fields: ["name", "size", "mtime_ms", "exists", "type"],
+      relative_path
+    };
+    watchmanClient.command(["subscribe", watch, name, sub], function(
+      error,
+      resp
+    ) {
+      if (error) {
+        // Probably an error in the subscription criteria
+        console.error("failed to subscribe: ", error);
+        return;
+      }
+
+      let eventCnt = 0;
+      watchmanClient.on("subscription", function(resp: WatchResponse) {
+        if (resp.is_fresh_instance) {
+          return;
+        }
+        if (resp.subscription !== name) return;
+        // console.log(resp);
+        // console.log("My Sub ", name, " event ", resp.subscription, expression);
+        onEvent(resp);
+      });
+
+      unsubscribers.push(async () => {
+        await new Promise(done =>
+          watchmanClient.command(["unsubscribe", watch, name], done)
+        );
+      });
+      resolve(resp);
+    });
+  });
 }
 
 const lookForBlockCommand = async (
@@ -62,11 +166,18 @@ const resolveInSeconds = (secs: number) => {
   return new Promise(resolve => setTimeout(resolve, secs * 1000));
 };
 
-export function TestCompiler() {
+export async function TestCompiler() {
+  const compilerInit = ora("Starting robowatch").start("Initializing Robo");
   // read the makefile
   for (const w of watchers) {
     w.close();
   }
+
+  for (const uns of unsubscribers) {
+    await uns();
+  }
+  unsubscribers.length = 0;
+  testers.length = 0;
 
   try {
     const sourceFile = new R.SourceCode(fs.readFileSync("Robo", "utf8"));
@@ -138,13 +249,29 @@ export function TestCompiler() {
           }
         } catch (e) {
           spinners.forEach(s => {
-            s.fail();
+            s.fail(String(e));
           });
         }
       }
     };
+    const watcher =
+      watcherType === "watchman" ? await WatchmanWatch(process.cwd()) : null;
 
-    parser.rootNode.children.forEach((node, index) => {
+    if (watcherType === "watchman") {
+      // .. .anymatch
+      const dirWatcher = await WatchmanWatch(process.cwd());
+      WatchmanSubscribe(
+        dirWatcher,
+        `sub${subCnt++}`,
+        ["allof", ["match", "**"]],
+        resp => {
+          for (const tester of testers) {
+            tester(resp);
+          }
+        }
+      );
+    }
+    parser.rootNode.children.forEach(async (node, index) => {
       const first = node.getFirst();
 
       const args = node.children.slice(1).filter(n => !n.is_block_node);
@@ -168,22 +295,84 @@ export function TestCompiler() {
       });
 
       if (first && first.vref === "watch") {
-        const watcher = chokidar
-          .watch(files.filter(f => !(f.charAt(0) === "!")), {
-            ignored: files
-              .filter(f => f.charAt(0) === "!")
-              .map(f => f.substring(1))
-          })
-          .on("change", (event, path) => {
-            // console.log("change ", event);
-            parseDirectoryCommands(block[0], event);
+        const followedFiles = files.filter(f => !(f.charAt(0) === "!"));
+        const ignoredFiles = files
+          .filter(f => f.charAt(0) === "!")
+          .map(f => f.substring(1));
+
+        if (watcherType === "watchman") {
+          testers.push(resp => {
+            for (const f of resp.files) {
+              if (anymatch(ignoredFiles, f.name)) {
+                continue;
+              }
+              if (anymatch(followedFiles, f.name)) {
+                parseDirectoryCommands(block[0], f.name);
+              }
+            }
           });
-        watchers.push(watcher);
+        }
+        if (watcherType === "chokidar") {
+          const watcher = chokidar
+            .watch(followedFiles, {
+              ignored: ignoredFiles
+            })
+            .on("change", (event, path) => {
+              // console.log("change ", event);
+              parseDirectoryCommands(block[0], event);
+            });
+          watchers.push(watcher);
+        }
+      }
+    });
+
+    compilerInit.succeed(`Robowatch is running, using ${watcherType}`);
+  } catch (e) {
+    compilerInit.fail(String(e));
+  }
+}
+
+async function startService() {
+  try {
+    try {
+      await TestSetup();
+    } catch (e) {}
+    chokidar.watch("Robo").on("all", (event, path) => {
+      TestCompiler();
+    });
+  } catch (e) {
+    ora("Error").fail(String(e));
+  }
+}
+
+async function TestSetup() {
+  if (!watchmanClient) {
+    return;
+  }
+  try {
+    await new Promise((resolve, reject) => {
+      try {
+        watchmanClient.on("error", () => {
+          reject();
+        });
+        watchmanClient.capabilityCheck(
+          { optional: [], required: ["relative_root"] },
+          function(error, resp) {
+            if (error) {
+              reject(error);
+              return;
+            }
+            // resp will be an extended version response:
+            // {'version': '3.8.0', 'capabilities': {'relative_root': true}}
+            watcherType = "watchman";
+            resolve(resp);
+          }
+        );
+      } catch (e) {
+        reject(e);
       }
     });
   } catch (e) {}
 }
 
-chokidar.watch("Robo").on("all", (event, path) => {
-  TestCompiler();
-});
+startService();
