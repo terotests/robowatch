@@ -18,7 +18,6 @@
   "author": "Tero Tolonen",
   "license": "MIT",
   "dependencies": {
-    "@types/fb-watchman": "^2.0.0",
     "anymatch": "^3.0.3",
     "chokidar": "^3.0.2",
     "fb-watchman": "^2.0.0",
@@ -26,5 +25,7 @@
     "ranger-compiler": "^2.1.70",
     "typescript": "^3.0.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/fb-watchman": "^2.0.0"
+  }
 }
