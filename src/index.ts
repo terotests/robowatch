@@ -16,10 +16,6 @@ const exec = util.promisify(childProcess.exec);
 const spawn = util.promisify(childProcess.spawn);
 const watchmanClient = new watchman.Client();
 
-// watchmanClient.on("subscription", function(resp) {
-//   console.log("subscription", resp);
-// });
-
 let watcherType: "chokidar" | "watchman" = "chokidar";
 let subCnt = 1;
 const watchers: Array<chokidar.FSWatcher> = [];
@@ -338,7 +334,9 @@ export async function TestCompiler() {
 
 async function startService() {
   try {
-    await TestSetup();
+    try {
+      await TestSetup();
+    } catch (e) {}
     chokidar.watch("Robo").on("all", (event, path) => {
       TestCompiler();
     });
@@ -348,25 +346,31 @@ async function startService() {
 }
 
 async function TestSetup() {
+  if (!watchmanClient) {
+    return;
+  }
   try {
     await new Promise((resolve, reject) => {
-      watchmanClient.capabilityCheck(
-        { optional: [], required: ["relative_root"] },
-        function(error, resp) {
-          if (error) {
-            // error will be an Error object if the watchman service is not
-            // installed, or if any of the names listed in the `required`
-            // array are not supported by the server
-            console.error(error);
-            reject(error);
-            return;
+      try {
+        watchmanClient.on("error", () => {
+          reject();
+        });
+        watchmanClient.capabilityCheck(
+          { optional: [], required: ["relative_root"] },
+          function(error, resp) {
+            if (error) {
+              reject(error);
+              return;
+            }
+            // resp will be an extended version response:
+            // {'version': '3.8.0', 'capabilities': {'relative_root': true}}
+            watcherType = "watchman";
+            resolve(resp);
           }
-          // resp will be an extended version response:
-          // {'version': '3.8.0', 'capabilities': {'relative_root': true}}
-          watcherType = "watchman";
-          resolve(resp);
-        }
-      );
+        );
+      } catch (e) {
+        reject(e);
+      }
     });
   } catch (e) {}
 }

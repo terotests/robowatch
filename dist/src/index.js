@@ -49,9 +49,6 @@ require("events").EventEmitter.prototype._maxListeners = 100;
 var exec = util.promisify(childProcess.exec);
 var spawn = util.promisify(childProcess.spawn);
 var watchmanClient = new watchman.Client();
-// watchmanClient.on("subscription", function(resp) {
-//   console.log("subscription", resp);
-// });
 var watcherType = "chokidar";
 var subCnt = 1;
 var watchers = [];
@@ -444,57 +441,74 @@ function TestCompiler() {
 exports.TestCompiler = TestCompiler;
 function startService() {
     return __awaiter(this, void 0, void 0, function () {
-        var e_3;
+        var e_3, e_4;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, TestSetup()];
+                    _a.trys.push([0, 5, , 6]);
+                    _a.label = 1;
                 case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, TestSetup()];
+                case 2:
                     _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    e_3 = _a.sent();
+                    return [3 /*break*/, 4];
+                case 4:
                     chokidar.watch("Robo").on("all", function (event, path) {
                         TestCompiler();
                     });
-                    return [3 /*break*/, 3];
-                case 2:
-                    e_3 = _a.sent();
-                    ora("Error").fail(String(e_3));
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    return [3 /*break*/, 6];
+                case 5:
+                    e_4 = _a.sent();
+                    ora("Error").fail(String(e_4));
+                    return [3 /*break*/, 6];
+                case 6: return [2 /*return*/];
             }
         });
     });
 }
 function TestSetup() {
     return __awaiter(this, void 0, void 0, function () {
-        var e_4;
+        var e_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, new Promise(function (resolve, reject) {
-                            watchmanClient.capabilityCheck({ optional: [], required: ["relative_root"] }, function (error, resp) {
-                                if (error) {
-                                    // error will be an Error object if the watchman service is not
-                                    // installed, or if any of the names listed in the `required`
-                                    // array are not supported by the server
-                                    console.error(error);
-                                    reject(error);
-                                    return;
-                                }
-                                // resp will be an extended version response:
-                                // {'version': '3.8.0', 'capabilities': {'relative_root': true}}
-                                watcherType = "watchman";
-                                resolve(resp);
-                            });
-                        })];
+                    if (!watchmanClient) {
+                        return [2 /*return*/];
+                    }
+                    _a.label = 1;
                 case 1:
-                    _a.sent();
-                    return [3 /*break*/, 3];
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, new Promise(function (resolve, reject) {
+                            try {
+                                watchmanClient.on("error", function () {
+                                    reject();
+                                });
+                                watchmanClient.capabilityCheck({ optional: [], required: ["relative_root"] }, function (error, resp) {
+                                    if (error) {
+                                        reject(error);
+                                        return;
+                                    }
+                                    // resp will be an extended version response:
+                                    // {'version': '3.8.0', 'capabilities': {'relative_root': true}}
+                                    watcherType = "watchman";
+                                    resolve(resp);
+                                });
+                            }
+                            catch (e) {
+                                reject(e);
+                            }
+                        })];
                 case 2:
-                    e_4 = _a.sent();
-                    return [3 /*break*/, 3];
-                case 3: return [2 /*return*/];
+                    _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    e_5 = _a.sent();
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
             }
         });
     });
