@@ -2,6 +2,8 @@
 
 Configurable filesystem observer and script runner.
 
+**NEW** uses Facebook Watchman 🔥if available 🚀
+
 - Listens to changes to the filesystem and runs scripts based on events defined in `Robo` -file
 - Multiple files and directory trees can be followed
 - Ignore pattern `!something`
